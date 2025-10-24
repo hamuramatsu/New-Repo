@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Idol</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Fira Code', monospace;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-color: #ff69b4;
+            background-image: url('bg.png');
+            min-height: 100vh;
+            cursor: pointer;
+            overflow: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 2s ease-out;
+            z-index: 999;
+        }
+
+        body.fade-to-black::before {
+            opacity: 1;
+        }
+
+        .popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .popup-overlay.active {
+            display: flex;
+        }
+
+        .popup {
+            background: #fff;
+            border: 1px solid #000;
+            box-shadow: 
+                0 0 30px rgba(233, 79, 183, 0.6),
+                0 0 50px rgba(255, 110, 199, 0.4),
+                4px 4px 0 rgba(0, 0, 0, 0.3);
+            width: 400px;
+            position: relative;
+            animation: popupBounce 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        @keyframes popupBounce {
+            0% {
+                transform: scale(0) rotate(-180deg);
+            }
+            100% {
+                transform: scale(1) rotate(0deg);
+            }
+        }
+
+        .popup-header {
+            background: linear-gradient(90deg, #d63384 0%, #ff69b4 25%, #ffb3d9 50%, #ff69b4 75%, #d63384 100%);
+            padding: 8px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            border-bottom: 1px solid #000;
+            position: relative;
+        }
+
+        .stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            top: 0;
+            left: 0;
+        }
+
+        .star {
+            position: absolute;
+            background: linear-gradient(135deg, #ff69b4 0%, #ffb3d9 50%, #ff1493 100%);
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            animation: twinkle 1s ease-in-out infinite;
+            filter: drop-shadow(0 0 2px rgba(255, 105, 180, 0.8));
+        }
+
+        @keyframes twinkle {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.3;
+                transform: scale(0.8);
+            }
+        }
+
+        .close-btn {
+            width: 18px;
+            height: 18px;
+            background: #e0e0e0;
+            border: 1px solid #000;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: #000;
+            padding: 0;
+            line-height: 1;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .close-btn:hover {
+            background: #fff;
+        }
+
+        .popup-content {
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .popup h2 {
+            color: #000;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 30px;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        button {
+            background: #e0e0e0;
+            border: 1px solid #000;
+            border-bottom: 2px solid #000;
+            border-right: 2px solid #000;
+            color: #000;
+            font-size: 16px;
+            font-weight: normal;
+            padding: 8px 30px;
+            cursor: pointer;
+            font-family: 'Fira Code', monospace;
+            min-width: 80px;
+        }
+
+        button:hover {
+            background: #ffb3d9;
+        }
+
+        button:active {
+            border-bottom: 1px solid #000;
+            border-right: 1px solid #000;
+            transform: translate(1px, 1px);
+        }
+    </style>
+</head>
+<body>
+    <div class="popup-overlay" id="popupOverlay">
+        <div class="popup">
+            <div class="popup-header">
+                <button class="close-btn" id="closeBtn">✕</button>
+            </div>
+            <div class="popup-content">
+                <div class="stars" id="stars"></div>
+                <h2>Do you want to become a digital idol?</h2>
+                <div class="button-container">
+                    <button id="yesBtn">Yes</button>
+                    <button id="noBtn">No</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const body = document.body;
+        const popupOverlay = document.getElementById('popupOverlay');
+        const yesBtn = document.getElementById('yesBtn');
+        const noBtn = document.getElementById('noBtn');
+        const closeBtn = document.getElementById('closeBtn');
+        const stars = document.getElementById('stars');
+
+        // Create decorative stars in popup
+        for (let i = 0; i < 12; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.width = Math.random() * 18 + 10 + 'px';
+            star.style.height = star.style.width;
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.animationDelay = Math.random() * 1 + 's';
+            stars.appendChild(star);
+        }
+
+        // Show popup when clicking anywhere on the page
+        body.addEventListener('click', (e) => {
+            if (!popupOverlay.classList.contains('active')) {
+                popupOverlay.classList.add('active');
+            }
+        });
+
+        // Prevent body click when clicking inside popup
+        document.querySelector('.popup').addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        // Close popup when clicking Yes
+        yesBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            popupOverlay.classList.remove('active');
+            body.classList.add('fade-to-black');
+        });
+
+        // Close popup when clicking X
+        closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            popupOverlay.classList.remove('active');
+        });
+
+        // No button behavior
+        noBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            popupOverlay.classList.remove('active');
+        });
+    </script>
+</body>
+</html>
